@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "i2c.h"
 #include "quadspi.h"
 #include "sai.h"
@@ -27,7 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "cs4272.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,7 +103,7 @@ int main(void)
   SystemClock_Config();
 
   /* Configure the peripherals common clocks */
-//  PeriphCommonClock_Config();
+  PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
@@ -110,12 +111,30 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_FMC_Init();
   MX_I2C4_Init();
   MX_SAI1_Init();
   MX_USB_DEVICE_Init();
-//  MX_QUADSPI_Init();
+  //MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
+
+  __HAL_RCC_SAI1_CLK_ENABLE();
+  __HAL_SAI_ENABLE(&hsai_BlockA1);
+
+  HAL_Delay(10);
+
+  if (CS4272_Init() != HAL_OK) {
+      Error_Handler();
+  }
+
+  if (HAL_SAI_Receive_DMA(&hsai_BlockB1, (uint8_t *)rx_buffer, BUFFER_SIZE) != HAL_OK) {
+      Error_Handler();
+  }
+
+  if (HAL_SAI_Transmit_DMA(&hsai_BlockA1, (uint8_t *)tx_buffer, BUFFER_SIZE) != HAL_OK) {
+      Error_Handler();
+  }
 
   /* USER CODE END 2 */
 
@@ -126,13 +145,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_SET);
-
-	HAL_Delay(1000);
-
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
-
-	HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -205,7 +217,7 @@ void PeriphCommonClock_Config(void)
 
   /** Initializes the peripherals clock
   */
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C4|RCC_PERIPHCLK_SAI1;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI1;
   PeriphClkInitStruct.PLL3.PLL3M = 5;
   PeriphClkInitStruct.PLL3.PLL3N = 49;
   PeriphClkInitStruct.PLL3.PLL3P = 20;
@@ -215,7 +227,6 @@ void PeriphCommonClock_Config(void)
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
   PeriphClkInitStruct.PLL3.PLL3FRACN = 1246;
   PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL3;
-  PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_PLL3;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -250,8 +261,20 @@ void MPU_Config(void)
   MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER1;
+  MPU_InitStruct.BaseAddress = 0x24000000 ;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512KB;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
   /* Enables the MPU */
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+
 }
 
 /**
@@ -262,7 +285,6 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
   while (1)
   {
   }

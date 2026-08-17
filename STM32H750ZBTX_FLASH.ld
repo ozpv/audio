@@ -175,6 +175,16 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
+  
+  .audio_buffers (NOLOAD):
+  {
+    . = ALIGN(32);
+    _saudio_buffers = .;
+    *(.audio_buffers)
+    *(.audio_buffers*)
+    . = ALIGN(32);
+    _eaudio_buffers = .;
+  } >RAM_D1
 }
 
 
