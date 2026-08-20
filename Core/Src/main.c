@@ -29,6 +29,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "cs4272.h"
+#include "w9825g6kh6.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -74,7 +75,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
-  // disabled by the boot loader
+  /* disabled by the boot loader */
   __enable_irq();
 
   /* USER CODE END 1 */
@@ -118,6 +119,9 @@ int main(void)
   MX_USB_DEVICE_Init();
   //MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
+
+  FMC_Init();
+  SDRAM_Test();
 
   __HAL_RCC_SAI1_CLK_ENABLE();
   __HAL_SAI_ENABLE(&hsai_BlockA1);
@@ -207,10 +211,8 @@ void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief Peripherals Common Clock Configuration
-  * @retval None
-  */
+/* USER CODE BEGIN 4 */
+
 void PeriphCommonClock_Config(void)
 {
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
@@ -232,8 +234,6 @@ void PeriphCommonClock_Config(void)
     Error_Handler();
   }
 }
-
-/* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
 
@@ -287,6 +287,13 @@ void Error_Handler(void)
   /* User can add his own implementation to report the HAL error return state */
   while (1)
   {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_SET);
+
+      HAL_Delay(500);
+
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
+
+      HAL_Delay(500);
   }
   /* USER CODE END Error_Handler_Debug */
 }

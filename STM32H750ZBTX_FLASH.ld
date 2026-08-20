@@ -44,6 +44,7 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 MEMORY
 {
   FLASH (rx)     : ORIGIN = 0x90000000, LENGTH = 16M
+  SDRAM (xrw)    : ORIGIN = 0xC0000000, LENGTH = 32M
   DTCMRAM (xrw)  : ORIGIN = 0x20000000, LENGTH = 128K
   RAM_D1 (xrw)   : ORIGIN = 0x24000000, LENGTH = 512K
   RAM_D2 (xrw)   : ORIGIN = 0x30000000, LENGTH = 288K
@@ -176,7 +177,7 @@ SECTIONS
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
   
-  .audio_buffers (NOLOAD):
+  .audio_buffers (NOLOAD) :
   {
     . = ALIGN(32);
     _saudio_buffers = .;
@@ -185,6 +186,14 @@ SECTIONS
     . = ALIGN(32);
     _eaudio_buffers = .;
   } >RAM_D1
+  
+  .sdram (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.sdram)
+    *(.sdram*)
+    . = ALIGN(4);
+  } >SDRAM
 }
 
 

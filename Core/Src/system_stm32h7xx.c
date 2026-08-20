@@ -311,7 +311,6 @@ void SystemInit (void)
 //
 //#endif /*DUAL_CORE && CORE_CM4*/
 
-  RCC->CFGR = 0x00000000;
   SCB->VTOR = 0x90000000;
 }
 
